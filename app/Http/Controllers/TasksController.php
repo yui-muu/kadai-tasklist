@@ -47,7 +47,7 @@ class TasksController extends Controller
     {
         
         // バリデーション
-        $request->validate([
+        $this->validate($request, [
             'status' => 'required|max:10',
         ]);
         
@@ -102,7 +102,7 @@ class TasksController extends Controller
     public function update(Request $request, $id)
     {
         // バリデーション
-        $request->validate([
+        $this->validate($request, [
             'status' => 'required|max:10',
         ]);
         
