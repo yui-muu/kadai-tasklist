@@ -88,15 +88,17 @@ class TasksController extends Controller
     public function show($id)
     {
         $task = Task::findOrFail($id);
-        
+        if (\Auth::id() === $task->user_id) {
         $user = \Auth::user();
         
-        $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
         // メッセージ詳細ビューでそれを表示
         return view('tasks.show', [
             'user' => $user,
             'task' => $task,
         ]);
+        }
+        // トップページへリダイレクトさせる
+        return redirect('/');
     }
 
     /**
@@ -108,11 +110,14 @@ class TasksController extends Controller
     public function edit($id)
     {
         $task = Task::findOrFail($id);
-
+        if (\Auth::id() === $task->user_id) {
         // メッセージ編集ビューでそれを表示
         return view('tasks.edit', [
             'task' => $task,
         ]);
+        }
+        // トップページへリダイレクトさせる
+        return redirect('/');
     }
 
     /**
@@ -130,11 +135,12 @@ class TasksController extends Controller
         ]);
         
         $task = Task::findOrFail($id);
-        
+        if (\Auth::id() === $micropost->user_id) {
         $task->status = $request->status;
         $task->content = $request->content;
         $task->user_id = \Auth::user()->id;
         $task->save();
+        }
 
         // トップページへリダイレクトさせる
         return redirect('/');
