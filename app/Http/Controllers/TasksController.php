@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 
 use App\Task;
 
+
+
 class TasksController extends Controller
 {
     /**
@@ -15,11 +17,27 @@ class TasksController extends Controller
      */
     public function index()
     {
-        $tasks = Task::all();
+        
+        $tasks = [];
+        if (\Auth::check()) { // 認証済みの場合
+            // 認証済みユーザを取得
+            $user = \Auth::user();
+            
+            $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
 
-        return view('tasks.index', [
-            'tasks' => $tasks,
-        ]);
+            $data = [
+                'user' => $user,
+                'tasks' => $tasks,
+            ];
+
+            return view('tasks.index', [
+                'tasks' => $tasks,
+            ]);
+          
+           
+        }
+         // Welcomeビューでそれらを表示
+            return view('welcome');
     }
 
     /**
@@ -54,6 +72,7 @@ class TasksController extends Controller
         $task = new Task;
         $task->status= $request->status;
         $task->content = $request->content;
+        $task->user_id = \Auth::user()->id;
         $task->save();
 
         // トップページへリダイレクトさせる
@@ -69,9 +88,13 @@ class TasksController extends Controller
     public function show($id)
     {
         $task = Task::findOrFail($id);
-
+        
+        $user = \Auth::user();
+        
+        $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
         // メッセージ詳細ビューでそれを表示
         return view('tasks.show', [
+            'user' => $user,
             'task' => $task,
         ]);
     }
@@ -110,6 +133,7 @@ class TasksController extends Controller
         
         $task->status = $request->status;
         $task->content = $request->content;
+        $task->user_id = \Auth::user()->id;
         $task->save();
 
         // トップページへリダイレクトさせる
@@ -126,7 +150,10 @@ class TasksController extends Controller
     {
         $task = Task::findOrFail($id);
         
+        // 認証済みユーザ（閲覧者）がその投稿の所有者である場合は、投稿を削除
+        if (\Auth::id() === $task->user_id) {
         $task->delete();
+        }
 
         // トップページへリダイレクトさせる
         return redirect('/');
